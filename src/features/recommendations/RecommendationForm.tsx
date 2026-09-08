@@ -59,7 +59,7 @@ export function RecommendationForm({ onSuggest }: RecommendationFormProps) {
         value={preferences.budget}
       />
       <button
-        className="w-full rounded-xl bg-amber-500 px-5 py-3 font-semibold text-slate-950 shadow-sm transition hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
+        className="min-h-11 w-full rounded-xl bg-amber-500 px-5 py-3 font-semibold text-slate-950 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:bg-amber-400 hover:shadow-md active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-500"
         disabled={!canSuggestActivities}
         type="submit"
       >

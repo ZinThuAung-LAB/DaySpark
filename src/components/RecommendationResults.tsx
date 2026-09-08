@@ -1,6 +1,7 @@
 import type { Activity } from '../types/activity'
 import type { CompletedActivity } from '../features/activityHistory/types'
 import { RecommendationCard } from './RecommendationCard'
+import { RecommendationSkeleton } from './RecommendationSkeleton'
 
 type RecommendationResultsProps = {
   activities: readonly Activity[]
@@ -11,6 +12,7 @@ type RecommendationResultsProps = {
   onToggleFavorite: (activityId: string) => void
   onTryAnother: (activityId: string) => void
   getCompletion: (activityId: string) => CompletedActivity | undefined
+  loading?: boolean
 }
 
 export function RecommendationResults({
@@ -22,7 +24,11 @@ export function RecommendationResults({
   onToggleFavorite,
   onTryAnother,
   getCompletion,
+  loading = false,
 }: RecommendationResultsProps) {
+  if (loading) {
+    return <section aria-busy="true" aria-labelledby="recommendations-heading" className="mt-10 border-t border-slate-200 pt-8"><h2 id="recommendations-heading" className="text-2xl font-bold text-slate-900">Your activity ideas</h2><div aria-label="Loading recommendations" className="mt-5 grid w-full grid-cols-1 gap-6 md:grid-cols-3" role="status">{[1, 2, 3].map((item) => <RecommendationSkeleton key={item} />)}</div></section>
+  }
   if (activities.length === 0) {
     return (
       <section aria-labelledby="recommendations-heading" className="mt-10 border-t border-slate-200 pt-8">
@@ -37,7 +43,7 @@ export function RecommendationResults({
   }
 
   return (
-    <section aria-labelledby="recommendations-heading" className="mt-10 border-t border-slate-200 pt-8">
+    <section aria-labelledby="recommendations-heading" aria-live="polite" className="mt-10 border-t border-slate-200 pt-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 id="recommendations-heading" className="text-2xl font-bold text-slate-900">
           Your activity ideas
@@ -64,7 +70,8 @@ export function RecommendationResults({
       <div aria-label="Try another activity" className="mx-auto mt-4 grid w-full max-w-6xl gap-2 sm:grid-cols-3">
         {activities.map((activity) => (
           <button
-            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+            className="min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition duration-200 hover:-translate-y-0.5 hover:border-amber-500 hover:bg-amber-50 hover:shadow-sm active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+            title="Random Activity"
             key={activity.id}
             onClick={() => onTryAnother(activity.id)}
             type="button"

@@ -32,7 +32,7 @@ export function DailyChallengeCard({ challenge, onComplete }: DailyChallengeCard
         <p className="mt-4 font-semibold text-emerald-800" role="status">Challenge completed today</p>
       ) : (
         <button
-          className="mt-4 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+          className="mt-4 min-h-11 rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-amber-400 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
           onClick={hasStarted ? handleComplete : () => setHasStarted(true)}
           type="button"
         >

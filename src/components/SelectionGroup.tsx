@@ -31,9 +31,9 @@ export function SelectionGroup<T extends string>({
 
           return (
             <label
-              className={`cursor-pointer rounded-xl border bg-white px-4 py-3 text-center text-sm font-medium shadow-sm transition hover:border-amber-400 hover:bg-amber-50 focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2 ${
+              className={`selection-option min-h-11 cursor-pointer rounded-xl border bg-white px-4 py-3 text-center text-sm font-medium shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-amber-400 hover:bg-amber-50 active:scale-[0.98] focus-within:ring-2 focus-within:ring-amber-500 focus-within:ring-offset-2 ${
                 value === option.value
-                  ? 'border-amber-500 bg-amber-100 text-amber-950'
+                  ? 'selection-option-selected border-amber-500 bg-amber-100 text-amber-950 shadow-md'
                   : 'border-slate-200 text-slate-700'
               }`}
               htmlFor={inputId}

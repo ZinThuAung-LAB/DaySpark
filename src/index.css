@@ -7,5 +7,34 @@
 
   body {
     margin: 0;
+    overflow-x: hidden;
   }
+}
+
+@keyframes selection-pop {
+  0% { transform: scale(1); }
+  55% { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+
+@keyframes level-up {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.04); opacity: 0.96; }
+  100% { transform: scale(1); }
+}
+
+@keyframes heart-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.selection-option-selected { animation: selection-pop 220ms ease-out; }
+.level-up-animation { animation: level-up 650ms ease-out; }
+.favorite-heart-active { animation: heart-pop 280ms ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .selection-option-selected,
+  .level-up-animation,
+  .favorite-heart-active { animation: none; }
 }

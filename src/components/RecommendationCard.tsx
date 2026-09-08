@@ -64,7 +64,7 @@ export function RecommendationCard({
       <div className="mt-auto flex w-full gap-2 pt-3">
         <button
           aria-pressed={Boolean(completedActivity)}
-          className="min-w-0 flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-emerald-700"
+          className="min-h-11 min-w-0 flex-1 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition duration-200 hover:-translate-y-0.5 hover:bg-slate-700 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-emerald-700"
           disabled={Boolean(completedActivity)}
           onClick={() => onDoThis(activity.id)}
           type="button"
@@ -74,10 +74,11 @@ export function RecommendationCard({
         <button
           aria-label={isFavorite ? `Remove ${activity.title} from favorites` : `Add ${activity.title} to favorites`}
           aria-pressed={isFavorite}
-          className="min-w-0 flex-1 rounded-lg border border-amber-400 px-3 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+          className="min-h-11 min-w-0 flex-1 rounded-lg border border-amber-400 px-3 py-2 text-sm font-semibold text-amber-900 transition duration-200 hover:-translate-y-0.5 hover:bg-amber-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
           onClick={onToggleFavorite}
           type="button"
         >
+          <span aria-hidden="true" className={`mr-1 inline-block text-lg leading-none transition-colors ${isFavorite ? 'favorite-heart-active text-rose-500' : 'text-amber-700'}`}>♥</span>
           {isFavorite ? 'Favorited' : 'Favorite'}
         </button>
       </div>

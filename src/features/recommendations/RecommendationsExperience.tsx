@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
+import type { ToastKind } from '../../components/Toast'
 import { RecommendationResults } from '../../components/RecommendationResults'
 import { activities } from '../../data/activities'
 import { DailyChallengeCard } from '../gamification/components/DailyChallengeCard'
@@ -13,7 +14,7 @@ import type { CompletePreferences } from '../../types/preferences'
 import { RecommendationForm } from './RecommendationForm'
 import { getRecommendations } from './recommendation-engine'
 
-export function RecommendationsExperience({ userId = null }: { userId?: string | null }) {
+export function RecommendationsExperience({ userId = null, onToast }: { userId?: string | null; onToast?: (message: string, kind?: ToastKind) => void }) {
   const [preferences, setPreferences] = useState<CompletePreferences | null>(null)
   const [recommendations, setRecommendations] = useState<Activity[]>([])
   const { completedActivities, completeActivity, getCompletion, getCompletionHistory } = useCompletedActivities(userId)
@@ -21,6 +22,7 @@ export function RecommendationsExperience({ userId = null }: { userId?: string |
   const gamification = useGamification(undefined, userId)
   const [message, setMessage] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   function handleSuggest(nextPreferences: CompletePreferences) {
     const nextRecommendations = getRecommendations(
@@ -49,6 +51,7 @@ export function RecommendationsExperience({ userId = null }: { userId?: string |
 
       if (completedActivity) {
         gamification.completeActivity(completedActivity.xpReward)
+        onToast?.(`Activity completed! +${completedActivity.xpReward} XP earned`)
       }
     }
   }
@@ -56,10 +59,12 @@ export function RecommendationsExperience({ userId = null }: { userId?: string |
   function handleToggleFavorite(activityId: string) {
     if (isFavorite(activityId)) {
       unfavoriteActivity(activityId)
+      onToast?.('Removed from Favorites', 'info')
       return
     }
 
     favoriteActivity(activityId)
+    onToast?.('Saved to Favorites')
   }
 
   function handleTryAnother(activityId: string) {
@@ -95,8 +100,8 @@ export function RecommendationsExperience({ userId = null }: { userId?: string |
         xpIntoCurrentLevel={gamification.xpIntoCurrentLevel}
         xpToNextLevel={gamification.xpToNextLevel}
       />
-      <RecommendationForm onSuggest={handleSuggest} />
-      <DailyChallengeCard challenge={gamification.dailyChallenge} onComplete={gamification.completeChallenge} />
+      <RecommendationForm onSuggest={(nextPreferences) => { setHasSearched(true); startTransition(() => handleSuggest(nextPreferences)) }} />
+      <DailyChallengeCard challenge={gamification.dailyChallenge} onComplete={() => { gamification.completeChallenge(); onToast?.(`Activity completed! +${gamification.dailyChallenge.xpReward} XP earned`) }} />
       {hasSearched && (
         <RecommendationResults
           activities={recommendations}
@@ -107,6 +112,7 @@ export function RecommendationsExperience({ userId = null }: { userId?: string |
           onToggleFavorite={handleToggleFavorite}
           onTryAnother={handleTryAnother}
           getCompletion={getCompletion}
+          loading={isPending}
         />
       )}
       <RecentCompletions completedActivities={completedActivities} />

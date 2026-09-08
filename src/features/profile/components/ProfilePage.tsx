@@ -103,18 +103,18 @@ export function ProfilePage({
           <label className="mt-4 block text-sm font-medium text-slate-800" htmlFor="avatar-url">Avatar image URL
             <input className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200" id="avatar-url" onChange={(event) => setPhotoURL(event.target.value)} placeholder="https://…" type="url" value={photoURL} />
           </label>
-          <button className="mt-4 rounded-lg bg-amber-500 px-4 py-2 font-semibold text-slate-950 hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 disabled:cursor-not-allowed" disabled={loading} type="submit">Save profile</button>
+          <button className="mt-4 min-h-11 rounded-lg bg-amber-500 px-4 py-2 font-semibold text-slate-950 hover:bg-amber-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600 disabled:cursor-not-allowed" disabled={loading} type="submit">Save profile</button>
         </form>
         <section aria-labelledby="data-settings-heading" className="rounded-2xl border border-slate-200 p-5">
           <h3 id="data-settings-heading" className="text-xl font-bold text-slate-900">Data and account</h3>
           <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600" onClick={onClearLocalData} type="button">Clear local cache</button>
-            <button className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600" disabled={loading} onClick={() => { void handleResync() }} type="button">Re-sync with cloud</button>
-            <button className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900" disabled={loading} onClick={() => { void onSignOut() }} type="button">Sign out</button>
+            <button className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600" onClick={onClearLocalData} type="button">Clear local cache</button>
+            <button className="min-h-11 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600" disabled={loading} onClick={() => { void handleResync() }} type="button">Re-sync with cloud</button>
+            <button className="min-h-11 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900" disabled={loading} onClick={() => { void onSignOut() }} type="button">Sign out</button>
           </div>
           <div className="mt-6 border-t border-red-100 pt-5">
             <p className="text-sm text-slate-600">{isDeleting ? 'This permanently clears your local and cloud progress. Select Delete account data again to confirm.' : 'Delete your stored DaySpark progress from this device and the cloud.'}</p>
-            <button className="mt-3 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600" disabled={loading} onClick={() => { void handleDeleteData() }} type="button">{isDeleting ? 'Confirm delete account data' : 'Delete account data'}</button>
+            <button className="mt-3 min-h-11 rounded-lg border border-red-300 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600" disabled={loading} onClick={() => { void handleDeleteData() }} type="button">{isDeleting ? 'Confirm delete account data' : 'Delete account data'}</button>
           </div>
         </section>
       </div>
