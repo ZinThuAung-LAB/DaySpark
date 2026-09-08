@@ -1,4 +1,14 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
+import { activities } from './data/activities'
+import {
+  clearCompletedActivities,
+  loadCompletedActivities,
+  saveCompletedActivity,
+} from './features/activityHistory/completed-activity-storage'
+import {
+  clearFavoriteActivityIds,
+  loadFavoriteActivityIds,
+} from './features/activityFavorites/favorite-activity-storage'
 import App from './App'
 
 function chooseAllPreferences() {
@@ -15,7 +25,28 @@ function choosePreferencesForRecommendations() {
   fireEvent.click(within(screen.getByRole('group', { name: 'What is your budget?' })).getByRole('radio', { name: 'Low' }))
 }
 
+function saveCompletionFor(activityId: string, completionId: string) {
+  const activity = activities.find((currentActivity) => currentActivity.id === activityId)
+
+  if (!activity) {
+    throw new Error(`Missing activity: ${activityId}`)
+  }
+
+  saveCompletedActivity({
+    completionId,
+    activityId: activity.id,
+    activityTitle: activity.title,
+    completedAt: '2026-09-08T08:00:00.000Z',
+    xpReward: activity.xpReward,
+  })
+}
+
 describe('App', () => {
+  beforeEach(() => {
+    clearCompletedActivities()
+    clearFavoriteActivityIds()
+  })
+
   it('disables activity suggestions until every preference is selected', () => {
     render(<App />)
 
@@ -47,9 +78,10 @@ describe('App', () => {
 
     expect(screen.getByRole('heading', { name: 'Your activity ideas' })).toBeInTheDocument()
     expect(screen.getAllByRole('article')).toHaveLength(3)
+    expect(new Set(screen.getAllByRole('article').map((card) => card.getAttribute('aria-label'))).size).toBe(3)
   })
 
-  it('marks an activity selected and replaces it with another compatible activity', () => {
+  it('completes an activity once and replaces it with another compatible activity', () => {
     render(<App />)
 
     choosePreferencesForRecommendations()
@@ -59,12 +91,77 @@ describe('App', () => {
     const originalTitle = within(firstCard).getByRole('heading').textContent
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Do This' }))
 
-    expect(within(firstCard).getByRole('button', { name: 'Selected' })).toHaveAttribute('aria-pressed', 'true')
+    const completedButton = within(firstCard).getByRole('button', { name: 'Completed' })
+    expect(completedButton).toBeDisabled()
+    expect(completedButton).toHaveAttribute('aria-pressed', 'true')
+    expect(within(firstCard).getByText(/xp earned/i)).toBeInTheDocument()
+
+    fireEvent.click(completedButton)
+    expect(loadCompletedActivities()).toHaveLength(1)
 
     fireEvent.click(within(firstCard).getByRole('button', { name: 'Try Another' }))
 
     expect(screen.getByRole('status')).toHaveTextContent('Here is another compatible activity.')
     expect(screen.queryByRole('heading', { name: originalTitle ?? '' })).not.toBeInTheDocument()
     expect(screen.getAllByRole('article')).toHaveLength(3)
+  })
+
+  it('keeps a newly completed activity in persisted history when generating later suggestions', () => {
+    render(<App />)
+
+    choosePreferencesForRecommendations()
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest Activities' }))
+
+    const firstCard = screen.getAllByRole('article')[0]
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Do This' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest Activities' }))
+
+    expect(loadCompletedActivities()).toHaveLength(1)
+    expect(screen.getAllByRole('article')).toHaveLength(3)
+  })
+
+  it('continues to show activities when every compatible activity was already completed', () => {
+    const compatibleActivities = activities.filter(
+      (activity) => activity.energy === 'low' && activity.duration === '10-minutes' && activity.budget === 'free',
+    )
+    compatibleActivities.forEach((activity, index) => saveCompletionFor(activity.id, `completed-${index}`))
+
+    render(<App />)
+
+    chooseAllPreferences()
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest Activities' }))
+
+    expect(screen.getAllByRole('article')).toHaveLength(3)
+  })
+
+  it('adds and removes a favorite immediately, with an accessible stateful control', () => {
+    render(<App />)
+
+    choosePreferencesForRecommendations()
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest Activities' }))
+
+    const firstCard = screen.getAllByRole('article')[0]
+    const activityTitle = within(firstCard).getByRole('heading').textContent ?? ''
+    const favoriteButton = within(firstCard).getByRole('button', { name: `Add ${activityTitle} to favorites` })
+    fireEvent.click(favoriteButton)
+
+    expect(loadFavoriteActivityIds()).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: 'Favorite activities' })).toBeInTheDocument()
+    expect(within(firstCard).getByRole('button', { name: `Remove ${activityTitle} from favorites` })).toHaveAttribute('aria-pressed', 'true')
+
+    fireEvent.click(within(firstCard).getByRole('button', { name: `Remove ${activityTitle} from favorites` }))
+
+    expect(loadFavoriteActivityIds()).toEqual([])
+    expect(screen.getByText('You have no favorite activities yet. Save an idea from your recommendations to find it here.')).toBeInTheDocument()
+  })
+
+  it('loads persisted favorites after a new application render', () => {
+    const activity = activities[0]
+    window.localStorage.setItem('dayspark.favorite-activity-ids', JSON.stringify([activity.id]))
+
+    render(<App />)
+
+    expect(screen.getByRole('heading', { name: 'Favorite activities' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: activity.title })).toBeInTheDocument()
   })
 })

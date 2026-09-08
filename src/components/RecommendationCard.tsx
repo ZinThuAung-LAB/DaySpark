@@ -1,10 +1,13 @@
 import type { Activity } from '../types/activity'
+import type { CompletedActivity } from '../features/activityHistory/types'
 
 type RecommendationCardProps = {
   activity: Activity
-  isSelected: boolean
+  completedActivity: CompletedActivity | undefined
+  isFavorite: boolean
   onDoThis: (activityId: string) => void
-  onTryAnother: (activityId: string) => void
+  onToggleFavorite: () => void
+  onTryAnother?: (activityId: string) => void
 }
 
 const durationLabels = {
@@ -16,15 +19,17 @@ const durationLabels = {
 
 export function RecommendationCard({
   activity,
-  isSelected,
+  completedActivity,
+  isFavorite,
   onDoThis,
+  onToggleFavorite,
   onTryAnother,
 }: RecommendationCardProps) {
   return (
     <article
       aria-label={`${activity.title} recommendation`}
       className={`rounded-xl border p-5 shadow-sm transition duration-200 ${
-        isSelected
+        completedActivity
           ? 'border-emerald-500 bg-emerald-50'
           : 'border-slate-200 bg-white hover:-translate-y-0.5 hover:shadow-md'
       }`}
@@ -39,6 +44,11 @@ export function RecommendationCard({
         </span>
       </div>
       <p className="mt-3 leading-6 text-slate-600">{activity.description}</p>
+      {completedActivity && (
+        <p className="mt-3 rounded-lg bg-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-900" role="status">
+          Completed · +{completedActivity.xpReward} XP earned
+        </p>
+      )}
       <dl className="mt-5 grid grid-cols-3 gap-3 text-sm">
         <div>
           <dt className="text-slate-500">Duration</dt>
@@ -55,20 +65,32 @@ export function RecommendationCard({
       </dl>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <button
-          aria-pressed={isSelected}
-          className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900"
+          aria-pressed={Boolean(completedActivity)}
+          className="rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-900 disabled:cursor-not-allowed disabled:bg-emerald-700"
+          disabled={Boolean(completedActivity)}
           onClick={() => onDoThis(activity.id)}
           type="button"
         >
-          {isSelected ? 'Selected' : 'Do This'}
+          {completedActivity ? 'Completed' : 'Do This'}
         </button>
         <button
-          className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
-          onClick={() => onTryAnother(activity.id)}
+          aria-label={isFavorite ? `Remove ${activity.title} from favorites` : `Add ${activity.title} to favorites`}
+          aria-pressed={isFavorite}
+          className="rounded-lg border border-amber-400 px-4 py-2.5 text-sm font-semibold text-amber-900 transition hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+          onClick={onToggleFavorite}
           type="button"
         >
-          Try Another
+          {isFavorite ? 'Favorited' : 'Favorite'}
         </button>
+        {onTryAnother && (
+          <button
+            className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+            onClick={() => onTryAnother(activity.id)}
+            type="button"
+          >
+            Try Another
+          </button>
+        )}
       </div>
     </article>
   )

@@ -1,20 +1,27 @@
 import type { Activity } from '../types/activity'
+import type { CompletedActivity } from '../features/activityHistory/types'
 import { RecommendationCard } from './RecommendationCard'
 
 type RecommendationResultsProps = {
   activities: readonly Activity[]
+  emptyMessage: string | null
+  isFavorite: (activityId: string) => boolean
   message: string | null
   onDoThis: (activityId: string) => void
+  onToggleFavorite: (activityId: string) => void
   onTryAnother: (activityId: string) => void
-  selectedActivityIds: ReadonlySet<string>
+  getCompletion: (activityId: string) => CompletedActivity | undefined
 }
 
 export function RecommendationResults({
   activities,
+  emptyMessage,
+  isFavorite,
   message,
   onDoThis,
+  onToggleFavorite,
   onTryAnother,
-  selectedActivityIds,
+  getCompletion,
 }: RecommendationResultsProps) {
   if (activities.length === 0) {
     return (
@@ -23,7 +30,7 @@ export function RecommendationResults({
           Your activity ideas
         </h2>
         <p className="mt-3 rounded-xl bg-slate-100 p-4 text-slate-700" role="status">
-          We could not find compatible activities. Try adjusting one or more preferences.
+          {emptyMessage ?? 'We could not find compatible activities. Try adjusting one or more preferences.'}
         </p>
       </section>
     )
@@ -46,9 +53,11 @@ export function RecommendationResults({
         {activities.map((activity) => (
           <RecommendationCard
             activity={activity}
-            isSelected={selectedActivityIds.has(activity.id)}
+            completedActivity={getCompletion(activity.id)}
+            isFavorite={isFavorite(activity.id)}
             key={activity.id}
             onDoThis={onDoThis}
+            onToggleFavorite={() => onToggleFavorite(activity.id)}
             onTryAnother={onTryAnother}
           />
         ))}

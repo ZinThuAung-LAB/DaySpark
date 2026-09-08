@@ -1,5 +1,6 @@
 import type { Activity } from '../../types/activity'
-import type { AvailableTime, Budget, CompletePreferences, EnergyLevel } from '../../types/preferences'
+import type { AvailableTime, CompletePreferences } from '../../types/preferences'
+import type { CompletedActivity } from '../activityHistory/types'
 
 type ScoredActivity = {
   activity: Activity
@@ -7,10 +8,11 @@ type ScoredActivity = {
   tieBreaker: number
 }
 
-const energyLevels: Record<EnergyLevel, number> = {
-  low: 1,
-  medium: 2,
-  high: 3,
+export type RecommendationOptions = {
+  completedActivities?: readonly CompletedActivity[]
+  excludedActivityIds?: ReadonlySet<string>
+  now?: Date
+  randomizer?: () => number
 }
 
 const durations: Record<AvailableTime, number> = {
@@ -20,54 +22,76 @@ const durations: Record<AvailableTime, number> = {
   '2-plus-hours': 4,
 }
 
-const budgets: Record<Budget, number> = {
-  free: 1,
-  low: 2,
-  flexible: 3,
-}
-
-function isCompatible(activity: Activity, preferences: CompletePreferences): boolean {
-  return (
-    energyLevels[activity.energy] <= energyLevels[preferences.energy] &&
-    durations[activity.duration] <= durations[preferences.availableTime] &&
-    budgets[activity.budget] <= budgets[preferences.budget]
-  )
+function fitsAvailableTime(activity: Activity, preferences: CompletePreferences): boolean {
+  return durations[activity.duration] <= durations[preferences.availableTime]
 }
 
 function scoreActivity(activity: Activity, preferences: CompletePreferences): number {
-  const moodScore = activity.moods.includes(preferences.mood) ? 100 : 0
-  const energyScore = activity.energy === preferences.energy ? 20 : 7
-  const durationScore = activity.duration === preferences.availableTime ? 15 : 6
-  const budgetScore = activity.budget === preferences.budget ? 10 : 4
+  const moodScore = activity.moods.includes(preferences.mood) ? 40 : 0
+  const energyScore = activity.energy === preferences.energy ? 25 : 0
+  const durationScore = fitsAvailableTime(activity, preferences) ? 20 : 0
+  const budgetScore = activity.budget === preferences.budget ? 15 : 0
 
   return moodScore + energyScore + durationScore + budgetScore
 }
 
+function getCompletionPenalty(
+  activityId: string,
+  completedActivities: readonly CompletedActivity[],
+  now: Date,
+): number {
+  const latestCompletion = completedActivities
+    .filter((activity) => activity.activityId === activityId)
+    .sort((first, second) => new Date(second.completedAt).getTime() - new Date(first.completedAt).getTime())[0]
+
+  if (!latestCompletion) {
+    return 0
+  }
+
+  const ageInDays = Math.max(0, (now.getTime() - new Date(latestCompletion.completedAt).getTime()) / 86_400_000)
+
+  if (ageInDays <= 3) {
+    return -30
+  }
+
+  if (ageInDays <= 7) {
+    return -15
+  }
+
+  return -5
+}
+
 /**
- * Selects up to three compatible activities. Mood matches are ranked first;
- * when fewer than three exist, compatible activities for other moods fill the gaps.
- * Supply a randomizer in tests to make tie ordering deterministic.
+ * Selects up to three activities that fit the available time. Mood, energy,
+ * budget, and completion recency affect ranking; only explicitly excluded IDs
+ * (such as currently visible cards) are removed from the candidate pool.
  */
 export function getRecommendations(
   preferences: CompletePreferences,
   activityCatalog: readonly Activity[],
-  randomizer: () => number = Math.random,
+  options: RecommendationOptions = {},
 ): Activity[] {
+  const {
+    completedActivities = [],
+    excludedActivityIds = new Set(),
+    now = new Date(),
+    randomizer = Math.random,
+  } = options
   const seenIds = new Set<string>()
 
   return activityCatalog
     .filter((activity) => {
-      if (seenIds.has(activity.id)) {
+      if (excludedActivityIds.has(activity.id) || seenIds.has(activity.id)) {
         return false
       }
 
       seenIds.add(activity.id)
-      return isCompatible(activity, preferences)
+      return fitsAvailableTime(activity, preferences)
     })
     .map<ScoredActivity>((activity) => ({
       activity,
-      score: scoreActivity(activity, preferences),
-      tieBreaker: randomizer(),
+      score: scoreActivity(activity, preferences) + getCompletionPenalty(activity.id, completedActivities, now),
+      tieBreaker: randomizer() * 4,
     }))
     .sort((first, second) => second.score - first.score || second.tieBreaker - first.tieBreaker)
     .slice(0, 3)
