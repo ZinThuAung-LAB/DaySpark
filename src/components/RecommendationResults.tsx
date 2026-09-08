@@ -49,7 +49,7 @@ export function RecommendationResults({
           {message}
         </p>
       )}
-      <div className="mt-5 grid gap-5 md:grid-cols-3">
+      <div className="mx-auto mt-5 grid w-full max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
         {activities.map((activity) => (
           <RecommendationCard
             activity={activity}
@@ -58,8 +58,19 @@ export function RecommendationResults({
             key={activity.id}
             onDoThis={onDoThis}
             onToggleFavorite={() => onToggleFavorite(activity.id)}
-            onTryAnother={onTryAnother}
           />
+        ))}
+      </div>
+      <div aria-label="Try another activity" className="mx-auto mt-4 grid w-full max-w-6xl gap-2 sm:grid-cols-3">
+        {activities.map((activity) => (
+          <button
+            className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-500 hover:bg-amber-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-600"
+            key={activity.id}
+            onClick={() => onTryAnother(activity.id)}
+            type="button"
+          >
+            Try Another
+          </button>
         ))}
       </div>
     </section>

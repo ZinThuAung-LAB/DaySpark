@@ -36,7 +36,7 @@ export function FavoriteActivities({
           You have no favorite activities yet. Save an idea from your recommendations to find it here.
         </p>
       ) : (
-        <div className="mt-5 grid gap-5 md:grid-cols-3">
+        <div className="mx-auto mt-5 grid w-full max-w-6xl grid-cols-1 gap-6 md:grid-cols-3">
           {favoriteActivities.map((activity) => (
             <RecommendationCard
               activity={activity}

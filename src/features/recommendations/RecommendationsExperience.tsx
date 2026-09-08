@@ -13,12 +13,12 @@ import type { CompletePreferences } from '../../types/preferences'
 import { RecommendationForm } from './RecommendationForm'
 import { getRecommendations } from './recommendation-engine'
 
-export function RecommendationsExperience() {
+export function RecommendationsExperience({ userId = null }: { userId?: string | null }) {
   const [preferences, setPreferences] = useState<CompletePreferences | null>(null)
   const [recommendations, setRecommendations] = useState<Activity[]>([])
-  const { completedActivities, completeActivity, getCompletion, getCompletionHistory } = useCompletedActivities()
-  const { favoriteActivityIds, favoriteActivity, unfavoriteActivity, isFavorite } = useFavoriteActivities()
-  const gamification = useGamification()
+  const { completedActivities, completeActivity, getCompletion, getCompletionHistory } = useCompletedActivities(userId)
+  const { favoriteActivityIds, favoriteActivity, unfavoriteActivity, isFavorite } = useFavoriteActivities(userId)
+  const gamification = useGamification(undefined, userId)
   const [message, setMessage] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
 

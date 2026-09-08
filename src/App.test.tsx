@@ -101,7 +101,7 @@ describe('App', () => {
     fireEvent.click(completedButton)
     expect(loadCompletedActivities()).toHaveLength(1)
 
-    fireEvent.click(within(firstCard).getByRole('button', { name: 'Try Another' }))
+    fireEvent.click(within(screen.getByLabelText('Try another activity')).getAllByRole('button', { name: 'Try Another' })[0])
 
     expect(screen.getByRole('status')).toHaveTextContent('Here is another compatible activity.')
     expect(screen.queryByRole('heading', { name: originalTitle ?? '' })).not.toBeInTheDocument()

@@ -27,9 +27,9 @@ export function RecentCompletions({ completedActivities }: RecentCompletionsProp
       </h2>
       <ol className="mt-4 space-y-3">
         {recentActivities.map((activity) => (
-          <li className="flex items-center justify-between gap-4 rounded-xl bg-emerald-50 px-4 py-3" key={activity.completionId}>
-            <div>
-              <p className="font-medium text-slate-900">{activity.activityTitle}</p>
+          <li className="flex min-w-0 items-center justify-between gap-4 rounded-xl bg-emerald-50 p-4" key={activity.completionId}>
+            <div className="min-w-0">
+              <p className="break-words font-medium text-slate-900">{activity.activityTitle}</p>
               <time className="text-sm text-slate-600" dateTime={activity.completedAt}>
                 {formatCompletionDate(activity.completedAt)}
               </time>
