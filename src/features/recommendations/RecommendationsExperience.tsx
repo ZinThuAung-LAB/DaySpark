@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { RecommendationResults } from '../../components/RecommendationResults'
 import { activities } from '../../data/activities'
+import { DailyChallengeCard } from '../gamification/components/DailyChallengeCard'
+import { GamificationHeader } from '../gamification/components/GamificationHeader'
+import { useGamification } from '../gamification/hooks/useGamification'
 import { FavoriteActivities } from '../activityFavorites/FavoriteActivities'
 import { useFavoriteActivities } from '../activityFavorites/useFavoriteActivities'
 import { RecentCompletions } from '../activityHistory/RecentCompletions'
@@ -15,6 +18,7 @@ export function RecommendationsExperience() {
   const [recommendations, setRecommendations] = useState<Activity[]>([])
   const { completedActivities, completeActivity, getCompletion, getCompletionHistory } = useCompletedActivities()
   const { favoriteActivityIds, favoriteActivity, unfavoriteActivity, isFavorite } = useFavoriteActivities()
+  const gamification = useGamification()
   const [message, setMessage] = useState<string | null>(null)
   const [hasSearched, setHasSearched] = useState(false)
 
@@ -41,7 +45,11 @@ export function RecommendationsExperience() {
     const activity = activities.find((currentActivity) => currentActivity.id === activityId)
 
     if (activity) {
-      completeActivity(activity)
+      const completedActivity = completeActivity(activity)
+
+      if (completedActivity) {
+        gamification.completeActivity(completedActivity.xpReward)
+      }
     }
   }
 
@@ -78,7 +86,17 @@ export function RecommendationsExperience() {
 
   return (
     <>
+      <GamificationHeader
+        currentStreak={gamification.currentStreak}
+        didLevelUp={gamification.didLevelUp}
+        lastXPReward={gamification.lastXPReward}
+        level={gamification.level}
+        progressPercentage={gamification.progressPercentage}
+        xpIntoCurrentLevel={gamification.xpIntoCurrentLevel}
+        xpToNextLevel={gamification.xpToNextLevel}
+      />
       <RecommendationForm onSuggest={handleSuggest} />
+      <DailyChallengeCard challenge={gamification.dailyChallenge} onComplete={gamification.completeChallenge} />
       {hasSearched && (
         <RecommendationResults
           activities={recommendations}

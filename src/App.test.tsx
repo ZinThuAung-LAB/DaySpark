@@ -9,6 +9,7 @@ import {
   clearFavoriteActivityIds,
   loadFavoriteActivityIds,
 } from './features/activityFavorites/favorite-activity-storage'
+import { clearUserStats } from './features/gamification/services/gamificationService'
 import App from './App'
 
 function chooseAllPreferences() {
@@ -45,6 +46,7 @@ describe('App', () => {
   beforeEach(() => {
     clearCompletedActivities()
     clearFavoriteActivityIds()
+    clearUserStats()
   })
 
   it('disables activity suggestions until every preference is selected', () => {
@@ -118,6 +120,29 @@ describe('App', () => {
 
     expect(loadCompletedActivities()).toHaveLength(1)
     expect(screen.getAllByRole('article')).toHaveLength(3)
+  })
+
+  it('awards XP and updates the gamification progress when an activity is completed', () => {
+    render(<App />)
+
+    choosePreferencesForRecommendations()
+    fireEvent.click(screen.getByRole('button', { name: 'Suggest Activities' }))
+
+    const firstCard = screen.getAllByRole('article')[0]
+    const activityTitle = within(firstCard).getByRole('heading').textContent ?? ''
+    const activity = activities.find((currentActivity) => currentActivity.title === activityTitle)
+
+    if (!activity) {
+      throw new Error(`Missing activity: ${activityTitle}`)
+    }
+
+    fireEvent.click(within(firstCard).getByRole('button', { name: 'Do This' }))
+
+    expect(screen.getByText(`+${activity.xpReward} XP earned`)).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'XP progress to next level' })).toHaveAttribute(
+      'aria-valuenow',
+      String(activity.xpReward % 100),
+    )
   })
 
   it('continues to show activities when every compatible activity was already completed', () => {
