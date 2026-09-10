@@ -1,9 +1,18 @@
-import type { DailyChallenge, UserStats } from '../../../types/gamification'
+import type { Achievement, DailyChallenge, UserStats } from '../../../types/gamification'
 import { readLocalStorage, removeLocalStorage, writeLocalStorage } from '../../../utils/local-storage'
+import { updateStreakWithFreeze } from './streakService'
 
 export const USER_STATS_STORAGE_KEY = 'dayspark.user-stats'
 
 export const XP_PER_LEVEL = 100
+
+/** The badges that can be earned from a user's persisted progress. */
+export const achievements = [
+  { id: 'first-step', title: 'First step', description: 'Complete your first activity.', icon: '★', condition: { type: 'activities', threshold: 1 } },
+  { id: 'on-a-roll', title: 'On a roll', description: 'Keep a three-day streak.', icon: '🔥', condition: { type: 'streak', threshold: 3 } },
+  { id: 'rising-star', title: 'Rising star', description: 'Earn 100 XP.', icon: '✦', condition: { type: 'xp', threshold: 100 } },
+  { id: 'challenge-champion', title: 'Challenge champion', description: 'Complete three daily challenges.', icon: '🏆', condition: { type: 'challenges', threshold: 3 } },
+] as const satisfies readonly Omit<Achievement, 'unlockedAt'>[]
 
 const dailyChallengeTemplates = [
   {
@@ -39,6 +48,8 @@ export const initialUserStats: UserStats = {
   bestStreak: 0,
   lastActivityDate: null,
   completedChallenges: [],
+  streakFreezes: 0,
+  streakFreezeMilestonesClaimed: 0,
 }
 
 export type AddXPResult = {
@@ -67,7 +78,9 @@ function isUserStats(value: unknown): value is UserStats {
     Number.isFinite(stats.bestStreak) &&
     (stats.lastActivityDate === null || isDateKey(stats.lastActivityDate)) &&
     Array.isArray(stats.completedChallenges) &&
-    stats.completedChallenges.every((challengeId) => typeof challengeId === 'string')
+    stats.completedChallenges.every((challengeId) => typeof challengeId === 'string') &&
+    (stats.streakFreezes === undefined || (typeof stats.streakFreezes === 'number' && Number.isFinite(stats.streakFreezes))) &&
+    (stats.streakFreezeMilestonesClaimed === undefined || (typeof stats.streakFreezeMilestonesClaimed === 'number' && Number.isFinite(stats.streakFreezeMilestonesClaimed)))
   )
 }
 
@@ -76,11 +89,6 @@ export function getCalendarDateKey(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
-}
-
-function calendarDayNumber(dateKey: string): number {
-  const [year, month, day] = dateKey.split('-').map(Number)
-  return Math.floor(Date.UTC(year, month - 1, day) / 86_400_000)
 }
 
 export function calculateLevel(xp: number): number {
@@ -98,28 +106,36 @@ export function addXP(stats: UserStats, amount: number): AddXPResult {
   }
 }
 
+/**
+ * Derives earned badges from progress rather than persisting a second source of
+ * truth. Callers may provide their completed activity count from history.
+ */
+export function getUnlockedAchievements(
+  stats: UserStats,
+  completedActivityCount: number,
+  unlockedAt: string | null = null,
+): Achievement[] {
+  const progress = {
+    activities: Math.max(0, completedActivityCount),
+    challenges: stats.completedChallenges.length,
+    streak: Math.max(stats.currentStreak, stats.bestStreak),
+    xp: Math.max(0, stats.xp),
+  }
+
+  return achievements
+    .filter((achievement) => progress[achievement.condition.type] >= achievement.condition.threshold)
+    .map((achievement) => ({ ...achievement, unlockedAt }))
+}
+
 export function updateStreak(stats: UserStats, completedAt: Date = new Date()): UserStats {
-  const completedDate = getCalendarDateKey(completedAt)
-
-  if (stats.lastActivityDate === completedDate) {
-    return stats
-  }
-
-  const previousDayNumber = stats.lastActivityDate ? calendarDayNumber(stats.lastActivityDate) : null
-  const completedDayNumber = calendarDayNumber(completedDate)
-  const currentStreak = previousDayNumber === completedDayNumber - 1 ? stats.currentStreak + 1 : 1
-
-  return {
-    ...stats,
-    currentStreak,
-    bestStreak: Math.max(stats.bestStreak, currentStreak),
-    lastActivityDate: completedDate,
-  }
+  return updateStreakWithFreeze(stats, getCalendarDateKey(completedAt)).stats
 }
 
 export function getDailyChallenge(date: Date = new Date(), completedDate: string | null = null): DailyChallenge {
   const dateKey = getCalendarDateKey(date)
-  const template = dailyChallengeTemplates[Math.abs(calendarDayNumber(dateKey)) % dailyChallengeTemplates.length]
+  const [year, month, day] = dateKey.split('-').map(Number)
+  const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86_400_000)
+  const template = dailyChallengeTemplates[Math.abs(dayNumber) % dailyChallengeTemplates.length]
 
   return { ...template, id: `${template.id}-${dateKey}`, completedDate }
 }
@@ -144,6 +160,8 @@ export function loadUserStats(): UserStats {
       currentStreak: Math.max(0, parsedValue.currentStreak),
       bestStreak: Math.max(0, parsedValue.bestStreak),
       completedChallenges: [...new Set(parsedValue.completedChallenges)],
+      streakFreezes: Math.max(0, parsedValue.streakFreezes ?? 0),
+      streakFreezeMilestonesClaimed: Math.max(0, parsedValue.streakFreezeMilestonesClaimed ?? 0),
     }
   } catch {
     return { ...initialUserStats, completedChallenges: [] }
@@ -158,6 +176,8 @@ export function saveUserStats(stats: UserStats): UserStats {
     currentStreak: Math.max(0, stats.currentStreak),
     bestStreak: Math.max(stats.bestStreak, stats.currentStreak, 0),
     completedChallenges: [...new Set(stats.completedChallenges)],
+    streakFreezes: Math.max(0, stats.streakFreezes),
+    streakFreezeMilestonesClaimed: Math.max(0, stats.streakFreezeMilestonesClaimed),
   }
 
   writeLocalStorage(USER_STATS_STORAGE_KEY, JSON.stringify(normalizedStats))

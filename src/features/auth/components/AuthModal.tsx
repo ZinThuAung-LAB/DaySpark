@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { sanitizeEmail } from '../../../utils/input-sanitization'
 
 type AuthMode = 'login' | 'signUp'
 
@@ -30,7 +31,8 @@ export function AuthModal({ error, loading, onClose, onLogin, onSignUp }: AuthMo
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    const nextValidationError = validate(email, password)
+    const sanitizedEmail = sanitizeEmail(email)
+    const nextValidationError = validate(sanitizedEmail, password)
     setValidationError(nextValidationError)
 
     if (nextValidationError) {
@@ -39,9 +41,9 @@ export function AuthModal({ error, loading, onClose, onLogin, onSignUp }: AuthMo
 
     try {
       if (mode === 'login') {
-        await onLogin(email, password)
+        await onLogin(sanitizedEmail, password)
       } else {
-        await onSignUp(email, password)
+        await onSignUp(sanitizedEmail, password)
       }
       onClose()
     } catch {

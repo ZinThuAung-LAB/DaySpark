@@ -1,0 +1,12 @@
+{
+  "name": "DaySpark",
+  "short_name": "DaySpark",
+  "description": "Find a feel-good activity for your moment.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffbeb",
+  "theme_color": "#f59e0b",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

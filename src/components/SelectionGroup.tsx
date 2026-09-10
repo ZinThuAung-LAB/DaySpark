@@ -25,7 +25,7 @@ export function SelectionGroup<T extends string>({
       <p id={descriptionId} className="mt-1 text-sm text-slate-600">
         {description}
       </p>
-      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
         {options.map((option) => {
           const inputId = `${name}-${option.value}`
 

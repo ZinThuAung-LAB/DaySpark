@@ -17,6 +17,7 @@ function renderProfile() {
   render(
     <ProfilePage
       completedActivitiesCount={8}
+      completedActivities={[]}
       customActivitiesCount={0}
       favoritesCount={3}
       loading={false}
@@ -25,6 +26,7 @@ function renderProfile() {
       onResync={vi.fn().mockResolvedValue(undefined)}
       onSaveProfile={onSaveProfile}
       onSignOut={vi.fn().mockResolvedValue(undefined)}
+      onUnlockStreakFreeze={vi.fn(() => true)}
       stats={{ ...initialUserStats, xp: 125, level: 2, currentStreak: 4, bestStreak: 7 }}
       user={user}
     />,

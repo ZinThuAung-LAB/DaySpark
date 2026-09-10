@@ -45,6 +45,18 @@ describe('useAuth', () => {
     expect(authService.signUp).toHaveBeenCalledWith('hello@dayspark.test', 'password')
   })
 
+  it('updates user state after a successful login', async () => {
+    vi.mocked(authService.login).mockResolvedValue(user)
+    const { result } = renderHook(() => useAuth())
+
+    await act(async () => {
+      await result.current.login('hello@dayspark.test', 'password')
+    })
+
+    expect(result.current).toMatchObject({ user, loading: false, error: null })
+    expect(authService.login).toHaveBeenCalledWith('hello@dayspark.test', 'password')
+  })
+
   it('exposes auth errors and clears the user on logout', async () => {
     vi.mocked(authService.getCurrentUser).mockReturnValue(user)
     vi.mocked(authService.onAuthStateChange).mockImplementation((onChange) => {

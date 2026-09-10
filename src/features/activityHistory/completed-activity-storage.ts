@@ -1,4 +1,5 @@
 import type { CompletedActivity } from './types'
+import type { Mood } from '../../types/preferences'
 import { readLocalStorage, removeLocalStorage, writeLocalStorage } from '../../utils/local-storage'
 
 export const COMPLETED_ACTIVITIES_STORAGE_KEY = 'dayspark.completed-activities'
@@ -24,7 +25,8 @@ function isCompletedActivity(value: unknown): value is CompletedActivity {
     typeof completedActivity.completedAt === 'string' &&
     Number.isFinite(Date.parse(completedActivity.completedAt)) &&
     typeof completedActivity.xpReward === 'number' &&
-    Number.isFinite(completedActivity.xpReward)
+    Number.isFinite(completedActivity.xpReward) &&
+    (completedActivity.mood === undefined || ['bored', 'relaxed', 'productive', 'social', 'adventurous'].includes(completedActivity.mood as Mood))
   )
 }
 

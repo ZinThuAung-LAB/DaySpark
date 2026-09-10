@@ -5,9 +5,9 @@ import {
   getDailyChallenge,
   loadUserStats,
   saveUserStats,
-  updateStreak,
   XP_PER_LEVEL,
 } from '../services/gamificationService'
+import { updateStreakWithFreeze } from '../services/streakService'
 import { syncActiveUserData } from '../../../services/dbService'
 import { USER_DATA_CHANGED_EVENT } from '../../../services/userDataLifecycle'
 
@@ -17,11 +17,13 @@ export function useGamification(getNow: GamificationClock = () => new Date(), us
   const [stats, setStats] = useState(loadUserStats)
   const [lastXPReward, setLastXPReward] = useState<number | null>(null)
   const [didLevelUp, setDidLevelUp] = useState(false)
+  const [didUseStreakFreeze, setDidUseStreakFreeze] = useState(false)
   useEffect(() => {
     const resetFromStorage = () => {
       setStats(loadUserStats())
       setLastXPReward(null)
       setDidLevelUp(false)
+      setDidUseStreakFreeze(false)
     }
     window.addEventListener(USER_DATA_CHANGED_EVENT, resetFromStorage)
     return () => window.removeEventListener(USER_DATA_CHANGED_EVENT, resetFromStorage)
@@ -50,10 +52,11 @@ export function useGamification(getNow: GamificationClock = () => new Date(), us
   }
 
   function completeActivity(xpReward: number) {
-    const streakUpdatedStats = updateStreak(stats, getNow())
-    const result = addXP(streakUpdatedStats, xpReward)
+    const streakResult = updateStreakWithFreeze(stats, getCalendarDateKey(getNow()))
+    const result = addXP(streakResult.stats, xpReward)
     saveUpdatedStats(result.stats, result.stats.xp - stats.xp, result.didLevelUp)
-    return result
+    setDidUseStreakFreeze(streakResult.usedStreakFreeze)
+    return { ...result, usedStreakFreeze: streakResult.usedStreakFreeze }
   }
 
   function completeChallenge() {
@@ -81,6 +84,8 @@ export function useGamification(getNow: GamificationClock = () => new Date(), us
     isDailyChallengeCompleted,
     lastXPReward,
     didLevelUp,
+    didUseStreakFreeze,
+    streakFreezes: stats.streakFreezes,
     rewardXP,
     completeActivity,
     completeChallenge,

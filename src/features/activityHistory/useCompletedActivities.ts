@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CompletionSource, CompletedActivity } from './types'
+import type { Mood } from '../../types/preferences'
 import { loadCompletedActivities, saveCompletedActivity } from './completed-activity-storage'
 import { syncActiveUserData } from '../../services/dbService'
 import { USER_DATA_CHANGED_EVENT } from '../../services/userDataLifecycle'
@@ -8,12 +9,13 @@ function createCompletionId(): string {
   return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`
 }
 
-function createCompletedActivity(activity: CompletionSource): CompletedActivity {
+function createCompletedActivity(activity: CompletionSource, mood?: Mood): CompletedActivity {
   return {
     completionId: createCompletionId(),
     activityId: activity.id,
     activityTitle: activity.title,
     completedAt: new Date().toISOString(),
+    mood,
     xpReward: activity.xpReward,
   }
 }
@@ -33,12 +35,12 @@ export function useCompletedActivities(userId: string | null = null) {
     return () => window.removeEventListener(USER_DATA_CHANGED_EVENT, resetFromStorage)
   }, [userId])
 
-  function completeActivity(activity: CompletionSource): CompletedActivity | null {
+  function completeActivity(activity: CompletionSource, mood?: Mood): CompletedActivity | null {
     if (completedActivityIds.current.has(activity.id)) {
       return null
     }
 
-    const completedActivity = createCompletedActivity(activity)
+    const completedActivity = createCompletedActivity(activity, mood)
     completedActivityIds.current.add(activity.id)
     const updatedHistory = saveCompletedActivity(completedActivity)
     completionHistory.current = updatedHistory

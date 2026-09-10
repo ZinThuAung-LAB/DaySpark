@@ -14,7 +14,7 @@ import type { CompletePreferences } from '../../types/preferences'
 import { RecommendationForm } from './RecommendationForm'
 import { getRecommendations } from './recommendation-engine'
 
-export function RecommendationsExperience({ userId = null, onToast }: { userId?: string | null; onToast?: (message: string, kind?: ToastKind) => void }) {
+export function RecommendationsExperience({ userId = null, onActivityCompleted, onStreakFreezeUsed, onToast }: { userId?: string | null; onActivityCompleted?: () => void; onStreakFreezeUsed?: () => void; onToast?: (message: string, kind?: ToastKind) => void }) {
   const [preferences, setPreferences] = useState<CompletePreferences | null>(null)
   const [recommendations, setRecommendations] = useState<Activity[]>([])
   const { completedActivities, completeActivity, getCompletion, getCompletionHistory } = useCompletedActivities(userId)
@@ -47,10 +47,12 @@ export function RecommendationsExperience({ userId = null, onToast }: { userId?:
     const activity = activities.find((currentActivity) => currentActivity.id === activityId)
 
     if (activity) {
-      const completedActivity = completeActivity(activity)
+      const completedActivity = completeActivity(activity, preferences?.mood)
 
       if (completedActivity) {
-        gamification.completeActivity(completedActivity.xpReward)
+        const result = gamification.completeActivity(completedActivity.xpReward)
+        if (result.usedStreakFreeze) onStreakFreezeUsed?.()
+        onActivityCompleted?.()
         onToast?.(`Activity completed! +${completedActivity.xpReward} XP earned`)
       }
     }

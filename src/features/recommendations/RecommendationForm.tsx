@@ -25,7 +25,7 @@ export function RecommendationForm({ onSuggest }: RecommendationFormProps) {
   }
 
   return (
-    <form className="mt-10 space-y-8" onSubmit={handleSubmit}>
+    <form className="mt-6 space-y-3 sm:mt-10 sm:space-y-6" onSubmit={handleSubmit}>
       <SelectionGroup<Mood>
         description="Choose the feeling that best matches your moment."
         legend="How are you feeling?"

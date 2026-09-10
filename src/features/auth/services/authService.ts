@@ -16,22 +16,16 @@ import { clearCompletedActivities } from '../../activityHistory/completed-activi
 import { clearFavoriteActivityIds } from '../../activityFavorites/favorite-activity-storage'
 import { clearUserStats } from '../../gamification/services/gamificationService'
 import { removeLocalStorage } from '../../../utils/local-storage'
+import { firebaseClientConfig } from '../../../config/env'
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-}
+const firebaseConfig = firebaseClientConfig
 
 let demoUser: UserProfile | null = null
 const demoAuthListeners = new Set<(user: UserProfile | null, error: string | null) => void>()
 let hasWarnedAboutDemoMode = false
 
 function isFirebaseConfigured(): boolean {
-  return Boolean(firebaseConfig.apiKey && firebaseConfig.authDomain && firebaseConfig.projectId && firebaseConfig.appId)
+  return firebaseConfig !== null
 }
 
 function isDemoMode(): boolean {
@@ -50,7 +44,7 @@ function notifyDemoAuthListeners(): void {
 }
 
 function getFirebaseAuth(): Auth | null {
-  if (!isFirebaseConfigured()) {
+  if (!firebaseConfig) {
     return null
   }
 

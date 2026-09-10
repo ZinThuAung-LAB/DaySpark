@@ -5,6 +5,8 @@ export type UserStats = {
   bestStreak: number
   lastActivityDate: string | null
   completedChallenges: string[]
+  streakFreezes: number
+  streakFreezeMilestonesClaimed: number
 }
 
 export type DailyChallenge = {

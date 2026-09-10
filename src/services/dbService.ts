@@ -6,6 +6,7 @@ import { clearFavoriteActivityIds, loadFavoriteActivityIds, saveFavoriteActivity
 import { clearCompletedActivities, loadCompletedActivities, saveCompletedActivity } from '../features/activityHistory/completed-activity-storage'
 import type { CompletedActivity } from '../features/activityHistory/types'
 import { clearUserStats, loadUserStats, saveUserStats } from '../features/gamification/services/gamificationService'
+import { firebaseClientConfig } from '../config/env'
 
 export type UserCloudData = {
   profile: UserStats | null
@@ -16,12 +17,7 @@ export type UserCloudData = {
 
 export type UserDataUpdate = Partial<UserCloudData>
 
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-}
+const firebaseConfig = firebaseClientConfig
 
 let activeUserId: string | null = null
 const FIRESTORE_TIMEOUT_MS = 10_000
@@ -60,7 +56,7 @@ function isActivity(value: unknown): value is Activity {
 }
 
 function getDatabase(): Firestore | null {
-  if (!Object.values(firebaseConfig).every(Boolean)) {
+  if (!firebaseConfig) {
     return null
   }
 
@@ -92,6 +88,8 @@ export function mergeUserData(localData: UserCloudData, cloudData: UserCloudData
         bestStreak: Math.max(localStats?.bestStreak ?? 0, cloudStats?.bestStreak ?? 0),
         lastActivityDate: [localStats?.lastActivityDate, cloudStats?.lastActivityDate].filter(Boolean).sort().at(-1) ?? null,
         completedChallenges: [...new Set([...(cloudStats?.completedChallenges ?? []), ...(localStats?.completedChallenges ?? [])])],
+        streakFreezes: Math.max(localStats?.streakFreezes ?? 0, cloudStats?.streakFreezes ?? 0),
+        streakFreezeMilestonesClaimed: Math.max(localStats?.streakFreezeMilestonesClaimed ?? 0, cloudStats?.streakFreezeMilestonesClaimed ?? 0),
       }
     : null
 
@@ -160,7 +158,11 @@ export async function fetchUserData(uid: string): Promise<UserCloudData | null> 
   const customActivitiesData = customActivities.data()
 
   return {
-    profile: profile.exists() && isUserStats(profileData) ? profileData : null,
+    profile: profile.exists() && isUserStats(profileData) ? {
+      ...profileData,
+      streakFreezes: profileData.streakFreezes ?? 0,
+      streakFreezeMilestonesClaimed: profileData.streakFreezeMilestonesClaimed ?? 0,
+    } : null,
     favorites: Array.isArray(favoritesData?.activityIds) ? favoritesData.activityIds.filter((id): id is string => typeof id === 'string') : [],
     history: Array.isArray(historyData?.activities) ? historyData.activities.filter(isCompletedActivity) : [],
     customActivities: Array.isArray(customActivitiesData?.activities) ? customActivitiesData.activities.filter(isActivity) : [],

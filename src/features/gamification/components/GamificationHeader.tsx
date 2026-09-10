@@ -18,7 +18,7 @@ export function GamificationHeader({
   xpToNextLevel,
 }: GamificationHeaderProps) {
   return (
-    <section aria-label="Gamification progress" className={`mt-8 grid gap-4 rounded-2xl bg-slate-900 p-5 text-white shadow-lg shadow-slate-950/10 sm:grid-cols-[auto_1fr_auto] sm:items-center ${didLevelUp ? 'level-up-animation' : ''}`}>
+    <section aria-label="Gamification progress" className={`mt-5 grid gap-3 rounded-2xl bg-slate-900 p-4 text-white shadow-lg shadow-slate-950/10 sm:mt-8 sm:gap-4 sm:p-5 sm:grid-cols-[auto_1fr_auto] sm:items-center ${didLevelUp ? 'level-up-animation' : ''}`}>
       <div className="flex items-center gap-3">
         <span aria-label={`Level ${level}`} className="flex size-12 items-center justify-center rounded-full bg-amber-400 text-lg font-bold text-slate-950">
           {level}
